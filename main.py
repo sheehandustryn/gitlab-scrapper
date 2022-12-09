@@ -92,7 +92,7 @@ if __name__ == '__main__':
   HEADERS["Accept"] = "application/json"
   HEADERS["Authorization"] = f"Bearer {args.bearer_token}"
   
-  if args.enumerate_groups and args.enumerate_projects:
+  if args.enumerate_groups and args.enumerate_projects and args.clone_projects:
     
     if args.root_group_id:
       enumerate_groups(group_ids=create_queue(args.root_group_id, output_directory=args.output_dir), output_directory=args.output_dir, headers=HEADERS)
@@ -100,11 +100,22 @@ if __name__ == '__main__':
         enumerate_groups(group_ids=create_queue(args.groups_file, output_dir=args.output_dir), output_directory=args.output_dir, headers=HEADERS)    
   
     enumerate_projects(group_ids=create_queue(f"{args.output_dir}/group-ids.txt", output_directory=args.output_dir), output_directory=args.output_dir, headers=HEADERS)
+
+  elif args.enumerate_groups and args.enumerate_projects:
+    
+    if args.root_group_id:
+      enumerate_groups(group_ids=create_queue(args.root_group_id, output_directory=args.output_dir), output_directory=args.output_dir, headers=HEADERS)
+    elif args.groups_list:
+        enumerate_groups(group_ids=create_queue(args.groups_file, output_dir=args.output_dir), output_directory=args.output_dir, headers=HEADERS)    
+  
+    enumerate_projects(group_ids=create_queue(f"{args.output_dir}/group-ids.txt", output_directory=args.output_dir), output_directory=args.output_dir, headers=HEADERS)
+
   elif args.enumerate_groups:
     if args.root_group_id:
       enumerate_groups(group_ids=create_queue(args.root_group_id, output_directory=args.output_dir), output_directory=args.output_dir, headers=HEADERS)
     elif args.groups_list:
         enumerate_groups(group_ids=create_queue(args.groups_file, output_dir=args.output_dir), output_directory=args.output_dir, headers=HEADERS)
+
   else:
     if args.root_group_id:
       enumerate_projects(group_ids=create_queue(args.root_group_id, output_directory=args.output_dir), output_directory=args.output_dir, headers=HEADERS)
