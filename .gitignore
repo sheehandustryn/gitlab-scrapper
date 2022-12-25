@@ -164,3 +164,8 @@ cython_debug/
 
 # Secrets
 **/token.txt
+
+
+# Outputs
+**/group-ids.txt
+**/project-ids.txt
