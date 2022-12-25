@@ -26,23 +26,40 @@ def create_queue_from_text_file(file: str):
         return values
     else:
         logging.error(f"Could not read values from {file}")
+        raise SystemExit(1)
+
+
+def get_pages(query_string: str):
+    session = requests.Session()
+    
+    try:
+        first_page = session.get(url=query_string, headers=HEADERS, params={'per_page': 100})
+        first_page.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        logging.error(e)
+        raise SystemExit(1)
+    
+    yield first_page.json()
+    number_of_pages = first_page.headers['X-Total-Pages']
+    
+    for page_number in range(2, int(number_of_pages)):
+        next_page = session.get(query_string, params={'page': page_number, 'per_page': 100}).json()
+        yield next_page
 
 
 def get_subgroups(group_id: str):
-    query_string = f" https://gitlab.com/api/v4/groups/{group_id}/subgroups"
-    r = requests.get(query_string, headers=HEADERS)
+
     subgroup_ids = queue.Queue()
-
-    if r.status_code == 200:
-        r_json = json.loads(r.text)
-
-        for value in r_json:
+            
+    for page in get_pages(query_string=f"https://gitlab.com/api/v4/groups/{group_id}/subgroups"):
+        
+        for value in page:
             subgroup_ids.put(value['id'])
-
+        
             with open(GROUP_IDS_FILE, "a") as f:
                 f.write(f"{value['id']}\n")
 
-        return subgroup_ids
+    return subgroup_ids
 
 
 def enumerate_groups(group_ids: queue):
@@ -61,13 +78,8 @@ def enumerate_groups(group_ids: queue):
 
 
 def get_projects(group_id: str):
-    query_string = f"https://gitlab.com/api/v4/groups/{group_id}/projects"
-    r = requests.get(query_string, headers=HEADERS)
-
-    if r.status_code == 200:
-        r_json = json.loads(r.text)
-
-        for value in r_json:
+    for page in get_pages(query_string=f"https://gitlab.com/api/v4/groups/{group_id}/projects"):
+        for value in page:
             with open(PROJECT_IDS_FILE, "a") as f:
                 f.write(f"{value['id']}\n")
 
